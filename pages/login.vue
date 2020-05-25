@@ -4,9 +4,9 @@
       <v-card-title>
         <h1 class="display-1">ログイン</h1>
         <v-spacer></v-spacer>
-        <v-sheet dark>
+        <v-sheet dark class="body-1">
           アカウントをお持ちでない方は
-          <a href="/register">登録へ</a>
+          <nuxt-link to="/register">登録へ</nuxt-link>
         </v-sheet>
       </v-card-title>
       <v-card-text>

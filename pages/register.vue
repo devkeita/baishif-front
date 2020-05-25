@@ -4,9 +4,9 @@
       <v-card-title>
         <h1 class="display-1">登録</h1>
         <v-spacer></v-spacer>
-        <v-sheet dark>
+        <v-sheet dark class="body-1">
           すでにアカウントをお持ちの方は
-          <a href="/login">ログインへ</a>
+          <nuxt-link to="/login">ログインへ</nuxt-link>
         </v-sheet>
       </v-card-title>
       <v-card-text>
@@ -45,7 +45,12 @@
         email: null,
         password: null,
         password_confirmation: null,
-        err: {},
+        errTemplate: {
+          name: [],
+          email: [],
+          password: [],
+        },
+        err: null,
       }
     },
     methods: {
@@ -68,10 +73,14 @@
           })
         })
         .catch((error) => {
-          this.err = error.response.data.errors
+          this.err = {...this.errTemplate, ...error.response.data.errors}
+          console.log(this.err)
         })
       }
-    }
+    },
+    beforeMount() {
+      this.err = this.errTemplate
+    },
   }
 </script>
 
