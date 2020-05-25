@@ -3,6 +3,11 @@
     <v-card>
       <v-card-title>
         <h1 class="display-1">ログイン</h1>
+        <v-spacer></v-spacer>
+        <v-sheet dark>
+          アカウントをお持ちでない方は
+          <a href="/register">登録へ</a>
+        </v-sheet>
       </v-card-title>
       <v-card-text>
         <v-form>
@@ -37,10 +42,8 @@
             password: this.password
           }
         })
-        .then((response) => {
-          console.log(response)
-        })
-        .catch((err) => {
+        .catch((error) => {
+          console.log(error.data)
           this.err = true
         })
       }
