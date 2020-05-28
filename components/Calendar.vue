@@ -14,30 +14,75 @@
         {{ selectedYear }}年 {{ selectedMonth }}月
       </v-card-title>
 
-      <v-img>
+      <v-card-text>
 
-        <v-simple-table light>
+        <div>
+          <v-layout row>
+            <v-col v-for="week in weeks" class="panel">{{ week }}</v-col>
+          </v-layout>
+        </div>
 
-          <thead>
-          <tr>
-            <td v-for="week in weeks">{{ week }}</td>
-          </tr>
-          </thead>
-
-          <tr v-for="calDay in calDays">
-            <td
+        <div v-for="calDay in calDays">
+          <v-layout row>
+            <v-col
               v-for="day in calDay"
-              :id="`${selectedYear}-${selectedMonth}-${day}`"
+              :id="`${selectedYear}-${selectedMonth}-${day.day}`"
               @click="selected"
-              :class="{selected: selectedDate === `${selectedYear}-${selectedMonth}-${day}`}"
+              :class="[
+                {selected: selectedDate.date === `${selectedYear}-${selectedMonth}-${day.day}`},
+                day.day !== '' ? 'date_panel': 'panel'
+              ]"
             >
-              {{ day }}
-            </td>
-          </tr>
+              {{ day.day }}
+            </v-col>
+          </v-layout>
+        </div>
 
-        </v-simple-table>
+      </v-card-text>
 
-      </v-img>
+      <v-card-text class="text-center">
+        {{ selectedDate.month }}月{{ selectedDate.day }}日
+
+        <v-list>
+          <v-list-item
+            v-for="shift in days[selectedDate.date]"
+          >
+            <v-list-item-title>
+              {{ shift.start_at }}
+            </v-list-item-title>
+          </v-list-item>
+        </v-list>
+
+        <v-btn block @click="addShift">シフトを追加</v-btn>
+
+        <v-dialog
+          v-model="dialog"
+          max-width="290"
+        >
+          <v-card>
+            <v-card-title class="headline">ログインが必要です。</v-card-title>
+
+            <v-card-actions>
+              <v-spacer></v-spacer>
+
+              <v-btn
+                color="grey lighten-8"
+                @click="dialog = false"
+              >
+                閉じる
+              </v-btn>
+
+              <v-btn
+                color="dark"
+                to="/login"
+              >
+                ログイン
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+
+      </v-card-text>
 
     </v-card>
 
@@ -46,15 +91,22 @@
 </template>
 
 <script>
-
   export default {
     data () {
       return {
-        weeks: [],
+        shifts: [],
+        days: [],
+        weeks: ['日', '月', '火', '水', '木', '金', '土'],
         calDays: [],
         selectedYear: null,
         selectedMonth: null,
-        selectedDate: null,
+        selectedDate: {
+          year: null,
+          month: null,
+          day: null,
+          date: null,
+        },
+        dialog: false,
       }
     },
     methods: {
@@ -73,19 +125,39 @@
         }
       },
       selected (e) {
-        this.selectedDate = e.target.id
+        if (e.target.classList["value"].match('date_panel')) {
+          const date = new Date(e.target.id)
+          this.selectedDate = {
+            year: date.getFullYear(),
+            month: date.getMonth() + 1,
+            day: date.getDate(),
+            date: `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}`
+          }
+          this.$store.dispatch('selectedDate/change', this.selectedDate)
+        }
       },
+      addShift () {
+        if (!this.$auth.loggedIn) {
+          this.dialog = true
+        } else {
+          this.$router.push('/shift/create')
+        }
+      }
     },
-    created() {
-      const today = new Date()
-      this.selectedDate = `${today.getFullYear()}-${today.getMonth()+1}-${today.getDate()}`
-      this.selectedYear = today.getFullYear()
-      this.selectedMonth = today.getMonth() + 1
+    async created() {
+      this.selectedDate = this.$store.state.selectedDate.selectedDate
+
+      if (this.$auth.loggedIn) {
+        const data = await this.$axios.get(`/api/shift?year=${this.selectedDate.year}&month=${this.selectedDate.month}`)
+        this.shifts = data.data
+      }
+
+      this.selectedYear = this.selectedDate.year
+      this.selectedMonth = this.selectedDate.month
     },
     watch: {
       selectedMonth: function () {
         this.calDays = []
-        this.weeks = ['日', '月', '火', '水', '木', '金', '土']
 
         const startDate = new Date(this.selectedYear, this.selectedMonth - 1, 1) // 月の最初の日を取得
         const endDate = new Date(this.selectedYear, this.selectedMonth,  0) // 月の最後の日を取得
@@ -93,19 +165,31 @@
         const startDay = startDate.getDay() // 月の最初の日の曜日を取得
         let dayCount = 1 // 日にちのカウント
 
+        this.days = []
+        for (let i = 1; i <= endDayCount; i++) {
+          this.days[`${this.selectedYear}-${this.selectedMonth}-${i}`] = []
+        }
+
+        this.shifts.forEach((value) => {
+          const date = new Date(value.start_at)
+          if (date.getFullYear() === this.selectedDate.year && date.getMonth()+1 === this.selectedDate.month) {
+            this.days[`${this.selectedYear}-${this.selectedMonth}-${date.getDate()}`].push(value)
+          }
+        })
+
         for (let w = 0; w < 6; w++) {
 
           this.calDays.push([])
 
           for (let d = 0; d < 7; d++) {
-            if (w == 0 && d < startDay) {
+            if (w === 0 && d < startDay) {
               // 1行目で1日の曜日の前
-              this.calDays[w].push('')
+              this.calDays[w].push({day: ''})
             } else if (dayCount > endDayCount) {
               // 末尾の日数を超えた
-              this.calDays[w].push('')
+              this.calDays[w].push({day: ''})
             } else {
-              this.calDays[w].push(dayCount)
+              this.calDays[w].push({day: dayCount})
               dayCount++
             }
           }
@@ -116,18 +200,15 @@
 </script>
 
 <style scoped>
-  td:first-child {
-    color: red;
-  }
-  td:last-child {
-    color: blue;
-  }
-  td {
-    border: 1px solid #ddd;
-    padding-bottom: 9px;
+  .panel {
+    padding-bottom: 19px;
     text-align: center;
   }
-  td.selected {
-    background-color: #E0E0E0;
+  .date_panel {
+    padding-bottom: 19px;
+    text-align: center;
+  }
+  .selected {
+    background: rgba(150, 150, 150, 0.5);
   }
 </style>
