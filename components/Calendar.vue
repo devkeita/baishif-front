@@ -231,7 +231,7 @@
         this.loading = false
       }
     },
-    async created() {
+    created() {
       this.selectedDate = this.$store.state.selectedDate.selectedDate
 
       this.selectedYear = this.selectedDate.year
