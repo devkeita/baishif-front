@@ -4,17 +4,43 @@
     <v-card>
 
       <v-card-title>
-        <v-btn>
-          <v-icon @click="prev" size="30">mdi-chevron-left</v-icon>
+        <v-btn @click="prev">
+          <v-icon size="30">mdi-chevron-left</v-icon>
         </v-btn>
-        <v-btn>
-          <v-icon @click="next" size="30">mdi-chevron-right</v-icon>
+        <v-btn @click="next">
+          <v-icon size="30">mdi-chevron-right</v-icon>
         </v-btn>
         <v-spacer></v-spacer>
-        {{ selectedYear }}年 {{ selectedMonth }}月
+        <v-btn @click="showSalary">
+          {{ selectedYear }}年 {{ selectedMonth }}月
+        </v-btn>
+
+        <v-dialog
+          v-model="salaryDialog"
+          max-width="290"
+        >
+          <v-card>
+            <v-card-title class="headline">{{ selectedYear }}年 {{ selectedMonth }}月分の給料</v-card-title>
+
+            <v-card-text class="text-center">{{ salaries[`${selectedYear}-${selectedMonth}`] }}円</v-card-text>
+
+            <v-card-actions>
+              <v-spacer></v-spacer>
+
+              <v-btn
+                color="grey lighten-8"
+                @click="salaryDialog = false"
+              >
+                閉じる
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+
+
       </v-card-title>
 
-      <v-card-text>
+      <v-card-text v-if="loading === false">
 
         <div>
           <v-layout row>
@@ -30,10 +56,15 @@
               @click="selected"
               :class="[
                 {selected: selectedDate.date === `${selectedYear}-${selectedMonth}-${day.day}`},
-                day.day !== '' ? 'date_panel': 'panel'
+                day.day !== '' ? 'date_panel': 'panel',
+                {today: isToday(day.day)}
               ]"
+              style="position: relative"
             >
               {{ day.day }}
+              <v-icon v-if="existShift(day.day)" class="shift">
+                mdi-circle-medium
+              </v-icon>
             </v-col>
           </v-layout>
         </div>
@@ -44,19 +75,25 @@
         {{ selectedDate.month }}月{{ selectedDate.day }}日
 
         <v-list>
-          <v-list-item
-            v-for="shift in days[selectedDate.date]"
-          >
-            <v-list-item-title>
-              {{ shift.start_at }}
-            </v-list-item-title>
-          </v-list-item>
+          <template v-for="shift in days[selectedDate.date]">
+            <v-list-item :to="{ name: 'shift-id', params: { id: shift.id } }" class="py-0 list-border">
+              <v-list-item-content class="py-0">
+                <v-sheet>
+                  バイト先： {{ shift.company.name }}
+                  <v-spacer></v-spacer>
+                  時間： {{ convertTime(shift.start_at) }} 〜 {{ convertTime(shift.finish_at) }}
+                  <v-spacer></v-spacer>
+                  給料： {{ shift.salary }}円
+                </v-sheet>
+              </v-list-item-content>
+            </v-list-item>
+          </template>
         </v-list>
 
         <v-btn block @click="addShift">シフトを追加</v-btn>
 
         <v-dialog
-          v-model="dialog"
+          v-model="needLoginDialog"
           max-width="290"
         >
           <v-card>
@@ -67,7 +104,7 @@
 
               <v-btn
                 color="grey lighten-8"
-                @click="dialog = false"
+                @click="needLoginDialog = false"
               >
                 閉じる
               </v-btn>
@@ -94,7 +131,7 @@
   export default {
     data () {
       return {
-        shifts: [],
+        loading: true,
         days: [],
         weeks: ['日', '月', '火', '水', '木', '金', '土'],
         calDays: [],
@@ -106,7 +143,9 @@
           day: null,
           date: null,
         },
-        dialog: false,
+        needLoginDialog: false,
+        salaryDialog: false,
+        salaries: [],
       }
     },
     methods: {
@@ -138,45 +177,40 @@
       },
       addShift () {
         if (!this.$auth.loggedIn) {
-          this.dialog = true
+          this.needLoginDialog = true
         } else {
           this.$router.push('/shift/create')
         }
-      }
-    },
-    async created() {
-      this.selectedDate = this.$store.state.selectedDate.selectedDate
-
-      if (this.$auth.loggedIn) {
-        const data = await this.$axios.get(`/api/shift?year=${this.selectedDate.year}&month=${this.selectedDate.month}`)
-        this.shifts = data.data
-      }
-
-      this.selectedYear = this.selectedDate.year
-      this.selectedMonth = this.selectedDate.month
-    },
-    watch: {
-      selectedMonth: function () {
-        this.calDays = []
-
+      },
+      showSalary () {
+        if (!this.$auth.loggedIn) {
+          this.needLoginDialog = true
+        } else {
+          this.salaryDialog = true
+        }
+      },
+      existShift (day) {
+        if (this.days[`${this.selectedYear}-${this.selectedMonth}-${day}`] && day) {
+          return true
+        }
+        return false
+      },
+      isToday (day) {
+        const today = new Date()
+        return `${today.getFullYear()}-${today.getMonth()+1}-${today.getDate()}` === `${this.selectedYear}-${this.selectedMonth}-${day}`
+      },
+      convertTime (stringDate) {
+        let date = new Date(stringDate)
+        return `${("0" + date.getHours()).slice(-2)}:${("0" + date.getMinutes()).slice(-2)}`
+      },
+      makeCalendar () {
         const startDate = new Date(this.selectedYear, this.selectedMonth - 1, 1) // 月の最初の日を取得
         const endDate = new Date(this.selectedYear, this.selectedMonth,  0) // 月の最後の日を取得
         const endDayCount = endDate.getDate() // 月の末日
         const startDay = startDate.getDay() // 月の最初の日の曜日を取得
         let dayCount = 1 // 日にちのカウント
 
-        this.days = []
-        for (let i = 1; i <= endDayCount; i++) {
-          this.days[`${this.selectedYear}-${this.selectedMonth}-${i}`] = []
-        }
-
-        this.shifts.forEach((value) => {
-          const date = new Date(value.start_at)
-          if (date.getFullYear() === this.selectedDate.year && date.getMonth()+1 === this.selectedDate.month) {
-            this.days[`${this.selectedYear}-${this.selectedMonth}-${date.getDate()}`].push(value)
-          }
-        })
-
+        this.calDays = []
         for (let w = 0; w < 6; w++) {
 
           this.calDays.push([])
@@ -194,6 +228,41 @@
             }
           }
         }
+        this.loading = false
+      }
+    },
+    async created() {
+      this.selectedDate = this.$store.state.selectedDate.selectedDate
+
+      this.selectedYear = this.selectedDate.year
+      this.selectedMonth = this.selectedDate.month
+    },
+    watch: {
+      selectedMonth: function () {
+        this.makeCalendar()
+      },
+      selectedYear: function () {
+        if (this.$auth.loggedIn) {
+          this.loading = true
+          this.$axios.get(`/api/shift?year=${this.selectedYear}`)
+            .then((response) => {
+              let shifts = response.data
+
+              this.days = []
+              for (let i = 0; i < shifts.length; i++) {
+                const date = new Date(shifts[i].start_at)
+                this.days[`${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}`] = []
+                this.days[`${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}`].push(shifts[i])
+
+                if (!this.salaries[`${date.getFullYear()}-${date.getMonth()+1}`]) {
+                  this.salaries[`${date.getFullYear()}-${date.getMonth()+1}`] = 0
+                }
+                this.salaries[`${date.getFullYear()}-${date.getMonth()+1}`] += shifts[i].salary
+              }
+
+              this.makeCalendar()
+            })
+        }
       }
     }
   }
@@ -201,14 +270,30 @@
 
 <style scoped>
   .panel {
+    border: 1px solid #212121;
     padding-bottom: 19px;
     text-align: center;
   }
   .date_panel {
+    border: 1px solid #212121;
     padding-bottom: 19px;
     text-align: center;
   }
   .selected {
     background: rgba(150, 150, 150, 0.5);
+  }
+  .today {
+    border-color: rgba(150, 150, 150, 0.5);
+  }
+  .shift {
+    position: absolute;
+    top: 70%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    -webkit-transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+  }
+  .list-border {
+    border: 1px solid #515151;
   }
 </style>
