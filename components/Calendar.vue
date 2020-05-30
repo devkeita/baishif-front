@@ -11,34 +11,55 @@
           <v-icon size="30">mdi-chevron-right</v-icon>
         </v-btn>
         <v-spacer></v-spacer>
-        <v-btn @click="showSalary">
+        <v-btn @click="showShare">
           {{ selectedYear }}年 {{ selectedMonth }}月
         </v-btn>
 
         <v-dialog
-          v-model="salaryDialog"
+          v-model="shareDialog"
           max-width="290"
         >
           <v-card>
-            <v-card-title class="headline">{{ selectedYear }}年 {{ selectedMonth }}月分の給料</v-card-title>
+            <v-card-title>共有</v-card-title>
 
-            <v-card-text class="text-center">{{ salaries[`${selectedYear}-${selectedMonth}`] }}円</v-card-text>
+            <v-card-text>
+              知り合いにこのシフトを共有する共有する
+              <v-alert v-model="shareErr" type="error" dismissible>シフトが追加されていないので共有できません。</v-alert>
+            </v-card-text>
 
             <v-card-actions>
-              <v-spacer></v-spacer>
 
-              <v-btn
-                color="grey lighten-8"
-                @click="salaryDialog = false"
-              >
-                閉じる
-              </v-btn>
+              <template v-if="shares[selectedMonth]">
+                <v-btn :href="`http://localhost:3000/shift/share?shareId=${this.shares[this.selectedMonth]}`" target="_blank" >
+                  リンクを開く
+                  <v-icon>mdi-book-plus-multiple</v-icon>
+                </v-btn>
+                <v-spacer></v-spacer>
+                <v-btn @click="deleteShare">
+                  共有停止
+                </v-btn>
+              </template>
+              <template v-if="!shares[selectedMonth]">
+                <v-btn @click="setShare">
+                  共有する
+                </v-btn>
+              </template>
+
             </v-card-actions>
           </v-card>
         </v-dialog>
 
-
       </v-card-title>
+
+      <v-sheet class="text-right">
+        給料：
+        <template v-if="salaries[`${selectedYear}-${selectedMonth}`]">
+          {{ salaries[`${selectedYear}-${selectedMonth}`] }}円
+        </template>
+        <template v-else>
+          0円
+        </template>
+      </v-sheet>
 
       <v-card-text v-if="loading === false">
 
@@ -131,6 +152,8 @@
   export default {
     data () {
       return {
+        shareErr: false,
+        shares: [],
         loading: true,
         days: [],
         weeks: ['日', '月', '火', '水', '木', '金', '土'],
@@ -144,7 +167,7 @@
           date: null,
         },
         needLoginDialog: false,
-        salaryDialog: false,
+        shareDialog: false,
         salaries: [],
       }
     },
@@ -182,11 +205,12 @@
           this.$router.push('/shift/create')
         }
       },
-      showSalary () {
+      showShare () {
+        this.shareErr = false
         if (!this.$auth.loggedIn) {
           this.needLoginDialog = true
         } else {
-          this.salaryDialog = true
+          this.shareDialog = true
         }
       },
       existShift (day) {
@@ -229,9 +253,36 @@
           }
         }
         this.loading = false
-      }
+      },
+      setShare () {
+        this.$axios.patch(`api/shift/share/set?year=${this.selectedYear}&month=${this.selectedMonth}`)
+          .then((response) => {
+            if (response.data === 'err') {
+              return
+            }
+
+            if (response.data === 400) {
+              this.shareErr = true
+              return
+            }
+            this.shares[this.selectedMonth] = response.data
+            this.shareDialog = false
+            this.shareDialog = true
+          })
+      },
+      deleteShare () {
+        this.$axios.patch(`/api/shift/share/delete?shareId=${this.shares[this.selectedMonth]}`)
+          .then((response) => {
+            this.shares[this.selectedMonth] = null
+            this.shareDialog = false
+            this.shareDialog = true
+          })
+          .catch(() => {
+            console.log('error')
+          })
+      },
     },
-    async created() {
+    created() {
       this.selectedDate = this.$store.state.selectedDate.selectedDate
 
       this.selectedYear = this.selectedDate.year
@@ -258,6 +309,7 @@
                   this.salaries[`${date.getFullYear()}-${date.getMonth()+1}`] = 0
                 }
                 this.salaries[`${date.getFullYear()}-${date.getMonth()+1}`] += shifts[i].salary
+                this.shares[date.getMonth()+1] = shifts[i].share_id
               }
 
               this.makeCalendar()
