@@ -112,7 +112,7 @@ export default {
       items: [
         {
           icon: 'mdi-home',
-          title: 'Welcome',
+          title: 'シフト',
           to: '/',
         },
       ],
