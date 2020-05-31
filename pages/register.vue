@@ -55,7 +55,7 @@
     },
     methods: {
       registerWithAuthModule() {
-        this.$axios.post('/api/register', {
+        this.$axios.post('register', {
           name: this.name,
           email: this.email,
           password: this.password,
@@ -74,7 +74,6 @@
         })
         .catch((error) => {
           this.err = {...this.errTemplate, ...error.response.data.errors}
-          console.log(this.err)
         })
       }
     },

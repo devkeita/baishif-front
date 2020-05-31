@@ -58,7 +58,7 @@
       },
       methods: {
         addCompany() {
-          this.$axios.post('/api/company', this.company)
+          this.$axios.post('company', this.company)
           .then((response) => {
             this.$router.push('/company')
           })

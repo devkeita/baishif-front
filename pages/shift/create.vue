@@ -133,7 +133,7 @@
           this.shift.finish_at = `${this.selectedDate.date} ${this.finish_at}:00`
         }
 
-        this.$axios.post('/api/shift', this.shift)
+        this.$axios.post('shift', this.shift)
           .then((response) => {
             this.$router.push('/')
           })
@@ -146,7 +146,7 @@
       this.err = this.errTemplate
     },
     async asyncData ({app}) {
-      const data = await app.$axios.get('/api/company')
+      const data = await app.$axios.get('company')
       let companies = []
       for (let i = 0; i < data.data.length; i++) {
         companies.push({text: data.data[i].name, value: data.data[i].id})

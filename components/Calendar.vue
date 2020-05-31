@@ -255,7 +255,7 @@
         this.loading = false
       },
       setShare () {
-        this.$axios.patch(`api/shift/share/set?year=${this.selectedYear}&month=${this.selectedMonth}`)
+        this.$axios.patch(`shift/share/set?year=${this.selectedYear}&month=${this.selectedMonth}`)
           .then((response) => {
             if (response.data === 'err') {
               return
@@ -271,7 +271,7 @@
           })
       },
       deleteShare () {
-        this.$axios.patch(`/api/shift/share/delete?shareId=${this.shares[this.selectedMonth]}`)
+        this.$axios.patch(`shift/share/delete?shareId=${this.shares[this.selectedMonth]}`)
           .then((response) => {
             this.shares[this.selectedMonth] = null
             this.shareDialog = false
@@ -295,7 +295,7 @@
       selectedYear: function () {
         if (this.$auth.loggedIn) {
           this.loading = true
-          this.$axios.get(`/api/shift?year=${this.selectedYear}`)
+          this.$axios.get(`shift?year=${this.selectedYear}`)
             .then((response) => {
               let shifts = response.data
 

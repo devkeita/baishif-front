@@ -161,7 +161,7 @@
           this.shift.finish_at = `${this.selectedDate.date} ${this.finish_at}:00`
         }
 
-        this.$axios.patch(`/api/shift/${this.$route.params.id}`, this.shift)
+        this.$axios.patch(`shift/${this.$route.params.id}`, this.shift)
           .then((response) => {
             this.$router.push('/')
           })
@@ -170,7 +170,7 @@
           })
       },
       deleteShift () {
-        this.$axios.delete(`/api/shift/${this.$route.params.id}`)
+        this.$axios.delete(`shift/${this.$route.params.id}`)
           .then((response) => {
             this.$router.push('/')
           })
@@ -180,9 +180,9 @@
       }
     },
     async asyncData ({app, params}) {
-      const shift = await app.$axios.get(`/api/shift/${params.id}`)
+      const shift = await app.$axios.get(`shift/${params.id}`)
 
-      const data = await app.$axios.get('/api/company')
+      const data = await app.$axios.get('company')
       let companies = []
       for (let i = 0; i < data.data.length; i++) {
         companies.push({text: data.data[i].name, value: data.data[i].id})

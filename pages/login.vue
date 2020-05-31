@@ -43,7 +43,6 @@
           }
         })
         .catch((error) => {
-          console.log(error.data)
           this.err = true
         })
       }

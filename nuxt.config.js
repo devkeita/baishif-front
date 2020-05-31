@@ -1,3 +1,4 @@
+require('dotenv').config()
 import colors from 'vuetify/es5/util/colors'
 
 export default {
@@ -52,8 +53,6 @@ export default {
   ** See https://axios.nuxtjs.org/options
   */
   axios: {
-    host: 'localhost',
-    port: 8000,
   },
   auth: {
     redirect: {
@@ -65,9 +64,9 @@ export default {
     strategies: {
       local: {
         endpoints: {
-          login: { url: '/api/login', method: 'post', propertyName: false },
-          logout: { url: '/api/logout', method: 'post'},
-          user: { url: '/api/me', method: 'get', propertyName: false},
+          login: { url: 'login', method: 'post', propertyName: false },
+          logout: { url: 'logout', method: 'post'},
+          user: { url: 'me', method: 'get', propertyName: false},
         }
       }
     }

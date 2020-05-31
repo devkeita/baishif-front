@@ -23,7 +23,7 @@
       }
     },
     mounted() {
-      this.$axios.get('/api/company')
+      this.$axios.get('company')
       .then((response) => {
         this.companies = response.data
       })

@@ -83,7 +83,7 @@
         }
       },
       async asyncData ({app, params}) {
-        const data = await app.$axios.get(`/api/company/${params.id}`)
+        const data = await app.$axios.get(`company/${params.id}`)
         return {company: data.data}
       },
       beforeMount() {
@@ -91,7 +91,7 @@
       },
       methods: {
         editCompany () {
-          this.$axios.patch(`/api/company/${this.$route.params.id}`, this.company)
+          this.$axios.patch(`company/${this.$route.params.id}`, this.company)
             .then((response) => {
               this.$router.push('/company')
             })
@@ -100,7 +100,7 @@
             })
         },
         deleteCompany () {
-          this.$axios.delete(`/api/company/${this.$route.params.id}`)
+          this.$axios.delete(`company/${this.$route.params.id}`)
             .then((response) => {
               this.$router.push('/company')
             })

@@ -150,7 +150,7 @@
       },
     },
     created() {
-      this.$axios.get(`/api/shift/share?shareId=${this.$route.query.shareId}`)
+      this.$axios.get(`shift/share?shareId=${this.$route.query.shareId}`)
       .then((response) => {
         let shifts = response.data
 
