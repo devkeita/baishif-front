@@ -51,7 +51,7 @@
 
       </v-card-title>
 
-      <v-sheet class="text-right">
+      <v-sheet class="text-right mr-3">
         給料：
         <template v-if="salaries[`${selectedYear}-${selectedMonth}`]">
           {{ salaries[`${selectedYear}-${selectedMonth}`] }}円
@@ -308,7 +308,7 @@
                 if (!this.salaries[`${date.getFullYear()}-${date.getMonth()+1}`]) {
                   this.salaries[`${date.getFullYear()}-${date.getMonth()+1}`] = 0
                 }
-                this.salaries[`${date.getFullYear()}-${date.getMonth()+1}`] += shifts[i].salary
+                this.salaries[`${date.getFullYear()}-${date.getMonth()+1}`] += Number(shifts[i].salary)
                 this.shares[date.getMonth()+1] = shifts[i].share_id
               }
 

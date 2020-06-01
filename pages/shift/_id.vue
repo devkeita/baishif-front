@@ -183,6 +183,7 @@
       const shift = await app.$axios.get(`shift/${params.id}`)
 
       const data = await app.$axios.get('company')
+
       let companies = []
       for (let i = 0; i < data.data.length; i++) {
         companies.push({text: data.data[i].name, value: data.data[i].id})
