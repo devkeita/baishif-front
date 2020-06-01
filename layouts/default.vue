@@ -136,7 +136,7 @@ export default {
         },
       ],
       miniVariant: false,
-      title: 'Nuxt'
+      title: 'バイシフ'
     }
   },
   methods: {
