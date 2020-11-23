@@ -1,22 +1,47 @@
-# baishif-front
+# バイシフ
+![スクリーンショット 2020-11-23 14 19 20](https://user-images.githubusercontent.com/56750754/99931913-a8ca2b80-2d99-11eb-836b-73ccfb17aec6.png)
+- シフト管理
+- シフト共有
 
-> Shift manager
+###### [バックエンドのコード](https://github.com/devkeita/baishif)
 
-## Build Setup
+## 使用技術
+- PHP/Laravel
+- Javascript/Vue/Nuxt/Vuetify
 
-```bash
-# install dependencies
-$ yarn install
+## 目的
 
-# serve with hot reload at localhost:3000
-$ yarn dev
+- シフト管理を簡単にする
+- 他の人にシフトを共有できるようにする
+- 給料の管理
 
-# build for production and launch server
-$ yarn build
-$ yarn start
+## ターゲット
 
-# generate static project
-$ yarn generate
-```
+- アルバイトをしている人
 
-For detailed explanation on how things work, check out [Nuxt.js docs](https://nuxtjs.org).
+## 機能
+
+- ユーザー登録
+
+- バイト先を作成
+  - バイト先の名前、職種を設定
+  - 時給、または日給を設定
+  - 深夜料金や土日料金を設定
+  - 交通費を設定
+
+- シフトを作成
+  - バイト先ごとに日にち、時間を設定
+
+- シフトを１週間、１ヶ月ごとに表示
+
+- １ヶ月の給料の確認
+  - 給料＋交通費
+  - バイト先ごとの給料
+  - 交通費別
+  - １年分の給料
+  
+- シフトを共有
+  - 1ヶ月、１週間など期間ごとに共有可能
+  - 共有相手は共有リンクを通して確認できる
+  - バイト先ごとに共有できるようにする
+  - 希望シフトと確定シフトどちらも共有できるようにする
